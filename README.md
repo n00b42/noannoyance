@@ -1,4 +1,6 @@
-# NoAnnoyance v2 GNOME Shell Extension
+# NoAnnoyance (fork)
+
+This extension is a fork of the original, that adds support for GNOME 44
 
 ## About
 Another extension, that removes the 'Window is ready' notification and puts the window into focus.  
@@ -14,6 +16,6 @@ This is a fork of https://github.com/sindex/no-annoyance, so thank you Alex for 
 - 44
 
 ## Installation
-1. Run `git clone git@github.com:bdaase/noannoyance.git`
-2. Run `mv noannoyance ~/.local/share/gnome-shell/extensions/noannoyance@daase.net`
+1. Run `git clone git@github.com:jirkavrba/noannoyance.git`
+2. Run `mv noannoyance ~/.local/share/gnome-shell/extensions/noannoyance@vrba.dev`
 3. Activate the extension in GNOME Tweaks

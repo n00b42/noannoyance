@@ -4,13 +4,7 @@
   "name": "NoAnnoyance (fork)",
   "gettext-domain": "gnome-shell-extension-noannoyance",
   "settings-schema": "org.gnome.shell.extensions.noannoyance",
-  "shell-version": [
-    "40",
-    "41",
-    "42",
-    "43",
-    "44"
-  ], 
-  "url": "https://github.com/jirkavrba/noannoyance", 
-  "uuid": "noannoyance@vrba.dev"
+  "shell-version": ["45"],
+  "url": "https://github.com/BjoernDaase/noannoyance",
+  "uuid": "noannoyance@daase.net"
 }

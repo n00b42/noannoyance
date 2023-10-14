@@ -1,17 +1,30 @@
-const Main = imports.ui.main;
-const ExtensionUtils = imports.misc.extensionUtils;
+import * as Main from 'resource:///org/gnome/shell/ui/main.js';
+import {Extension} from 'resource:///org/gnome/shell/extensions/extension.js';
 
-class StealMyFocus {
-  constructor() {
+export default class StealMyFocus extends Extension {
+  constructor(metadata) {
+    super(metadata);
+  }
+
+  enable() {
+    console.debug("Disabling 'Window Is Ready' Notification");
+
     this._windowDemandsAttentionId = global.display.connect('window-demands-attention', this._onWindowDemandsAttention.bind(this));
     this._windowMarkedUrgentId = global.display.connect('window-marked-urgent', this._onWindowDemandsAttention.bind(this));
+  }
+
+  disable() {
+    console.debug("Reenabling 'Window Is Ready' Notification");
+
+    global.display.disconnect(this._windowDemandsAttentionId);
+    global.display.disconnect(this._windowMarkedUrgentId);
   }
 
   _onWindowDemandsAttention(display, window) {
     if (!window || window.has_focus() || window.is_skip_taskbar())
       return;
 
-    let settings = ExtensionUtils.getSettings('org.gnome.shell.extensions.noannoyance');
+    let settings = this.getSettings();
     let preventDisable = settings.get_boolean('enable-ignorelist');
     let byClassList = settings.get_strv('by-class');
 
@@ -21,35 +34,4 @@ class StealMyFocus {
 
     Main.activateWindow(window);
   }
-
-  destroy() {
-    global.display.disconnect(this._windowDemandsAttentionId);
-    global.display.disconnect(this._windowMarkedUrgentId);
-  }
-}
-
-let stealmyfocus;
-let oldHandler;
-
-function init() {
-}
-
-function enable() {
-  global.display.disconnect(Main.windowAttentionHandler._windowDemandsAttentionId);
-  global.display.disconnect(Main.windowAttentionHandler._windowMarkedUrgentId);
-  oldHandler = Main.windowAttentionHandler;
-
-  stealmyfocus = new StealMyFocus();
-
-  Main.windowAttentionHandler = stealmyfocus;
-}
-
-function disable() {
-  stealmyfocus.destroy();
-  stealmyfocus = null;
-
-  oldHandler._windowDemandsAttentionId = global.display.connect('window-demands-attention', oldHandler._onWindowDemandsAttention.bind(oldHandler));
-  oldHandler._windowMarkedUrgentId = global.display.connect('window-marked-urgent', oldHandler._onWindowDemandsAttention.bind(oldHandler));
-
-  Main.windowAttentionHandler = oldHandler;
 }

@@ -1,124 +1,108 @@
 // Based on https://github.com/ubuntu/gnome-shell-extension-appindicator
 
-"use strict";
+import Gio from 'gi://Gio';
+import Gtk from 'gi://Gtk';
+import GObject from 'gi://GObject';
+import Adw from 'gi://Adw';
 
-const {
-    Gio,
-    Gtk,
-    GObject
-} = imports.gi;
-
-const ExtensionUtils = imports.misc.extensionUtils;
+import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
 const WMCLASS_LIST = 'by-class';
 const IGNORELIST_ENABLED = 'enable-ignorelist';
 
-function init() {}
+export default class Preferences extends ExtensionPreferences {
+    fillPreferencesWindow(window) {
+        let settings = this.getSettings();
 
-function buildPrefsWidget() {
-    let settings = ExtensionUtils.getSettings(
-        "org.gnome.shell.extensions.noannoyance"
-    );
+        const page = new Adw.PreferencesPage({
+            title: 'General',
+            icon_name: 'dialog-information-symbolic',
+        });
 
-    let settingsBox = new Gtk.Box({
-        orientation: Gtk.Orientation.VERTICAL,
-        spacing: 8,
-        margin_bottom: 60,
-    });
+        const group = new Adw.PreferencesGroup({
+            title: 'Settings',
+        });
+        page.add(group);
 
-    let enableIgnorelistBox = new Gtk.Box({
-        orientation: Gtk.Orientation.HORIZONTAL,
-    });
-    let wmClassBox = new Gtk.Box({
-        orientation: Gtk.Orientation.HORIZONTAL
-    });
+        let toggle = new Adw.SwitchRow({
+            title: "Enable Ignorelist",
+        });
 
-    let toggleLabel = new Gtk.Label({
-        label: "Enable Ignorelist",
-        halign: Gtk.Align.START,
-        hexpand: true,
-        visible: true,
-    });
+        group.add(toggle);
 
-    let toggle = new Gtk.Switch({
-        active: settings.get_boolean(IGNORELIST_ENABLED),
-        halign: Gtk.Align.END,
-        visible: true,
-    });
+        settings.bind(
+            IGNORELIST_ENABLED,
+            toggle,
+            "active",
+            Gio.SettingsBindFlags.DEFAULT
+        );
 
-    enableIgnorelistBox.append(toggleLabel);
-    enableIgnorelistBox.append(toggle);
+        let expander = new Adw.ExpanderRow({
+            title: 'WM__CLASS List ("Alt + F2" > Run "lg" > Click "Windows")',
+        });
 
-    settings.bind(
-        IGNORELIST_ENABLED,
-        toggle,
-        "active",
-        Gio.SettingsBindFlags.DEFAULT
-    );
+        const customListStore = new Gtk.ListStore();
+        customListStore.set_column_types([GObject.TYPE_STRING]);
+        const customInitArray = settings.get_strv(WMCLASS_LIST);
+        for (let i = 0; i < customInitArray.length; i++) {
+            customListStore.set(customListStore.append(), [0], [customInitArray[i]]);
+        }
+        customListStore.append();
 
-    settingsBox.append(enableIgnorelistBox);
+        const customTreeView = new Gtk.TreeView({
+            model: customListStore,
+            hexpand: true,
+            vexpand: true,
+        });
 
-    const customListStore = new Gtk.ListStore();
-    customListStore.set_column_types([GObject.TYPE_STRING]);
-    const customInitArray = settings.get_strv(WMCLASS_LIST);
-    for (let i = 0; i < customInitArray.length; i++) {
-        customListStore.set(customListStore.append(), [0], [customInitArray[i]]);
-    }
-    customListStore.append();
+        const indicatorIdColumn = new Gtk.TreeViewColumn({
+            title: 'Name',
+            sizing: Gtk.TreeViewColumnSizing.AUTOSIZE,
+        });
 
-    const customTreeView = new Gtk.TreeView({
-        model: customListStore,
-        hexpand: true,
-        vexpand: true,
-    });
+        const cellrenderer = new Gtk.CellRendererText({
+            editable: true,
+        });
 
-    const indicatorIdColumn = new Gtk.TreeViewColumn({
-        title: 'WM__CLASS List ("Alt + F2" > Run "lg" > Click "Windows")',
-        sizing: Gtk.TreeViewColumnSizing.AUTOSIZE,
-    });
+        indicatorIdColumn.pack_start(cellrenderer, true);
+        indicatorIdColumn.add_attribute(cellrenderer, "text", 0);
+        customTreeView.insert_column(indicatorIdColumn, 0);
+        customTreeView.set_grid_lines(Gtk.TreeViewGridLines.BOTH);
 
-    const cellrenderer = new Gtk.CellRendererText({
-        editable: true
-    });
+        expander.add_suffix(customTreeView);
+        group.add(expander);
 
-    indicatorIdColumn.pack_start(cellrenderer, true);
-    indicatorIdColumn.add_attribute(cellrenderer, "text", 0);
-    customTreeView.insert_column(indicatorIdColumn, 0);
-    customTreeView.set_grid_lines(Gtk.TreeViewGridLines.BOTH);
+        cellrenderer.connect("edited", (w, path, text) => {
+            this.selection = customTreeView.get_selection();
+            const selection = this.selection.get_selected();
+            const iter = selection[2];
 
-    wmClassBox.append(customTreeView);
-    settingsBox.append(wmClassBox);
+            customListStore.set(iter, [0], [text]);
+            const storeLength = customListStore.iter_n_children(null);
+            const customIconArray = [];
 
-    cellrenderer.connect("edited", (w, path, text) => {
-        this.selection = customTreeView.get_selection();
-        const selection = this.selection.get_selected();
-        const iter = selection[2];
+            for (let i = 0; i < storeLength; i++) {
+                const returnIter = customListStore.iter_nth_child(null, i);
+                const [success, iterList] = returnIter;
+                if (!success) break;
 
-        customListStore.set(iter, [0], [text]);
-        const storeLength = customListStore.iter_n_children(null);
-        const customIconArray = [];
-
-        for (let i = 0; i < storeLength; i++) {
-            const returnIter = customListStore.iter_nth_child(null, i);
-            const [success, iterList] = returnIter;
-            if (!success) break;
-
-            if (iterList) {
-                const id = customListStore.get_value(iterList, 0);
-                if (id) customIconArray.push(id);
-            } else {
-                break;
+                if (iterList) {
+                    const id = customListStore.get_value(iterList, 0);
+                    if (id) customIconArray.push(id);
+                } else {
+                    break;
+                }
             }
-        }
-        settings.set_strv(WMCLASS_LIST, customIconArray);
+            settings.set_strv(WMCLASS_LIST, customIconArray);
 
-        if (storeLength === 1 && text) customListStore.append();
+            if (storeLength === 1 && text) customListStore.append();
 
-        if (storeLength > 1) {
-            if (!text && storeLength - 1 > path) customListStore.remove(iter);
-            if (text && storeLength - 1 <= path) customListStore.append();
-        }
-    });
+            if (storeLength > 1) {
+                if (!text && storeLength - 1 > path) customListStore.remove(iter);
+                if (text && storeLength - 1 <= path) customListStore.append();
+            }
+        });
 
-    return settingsBox;
+        window.add(page);
+    }
 }

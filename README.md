@@ -1,6 +1,6 @@
 # NoAnnoyance (fork)
 
-This extension is a fork of the original, that adds support for GNOME 45
+This extension is a fork of the original, that adds support for GNOME 45 and 46
 
 ## About
 Another extension, that removes the 'Window is ready' notification and puts the window into focus.  
@@ -10,6 +10,7 @@ This is a fork of https://github.com/sindex/no-annoyance, so thank you Alex for 
 
 ## Supported GNOME versions
 - 45
+- 46
 
 ## Installation
 1. Run `git clone git@github.com:jirkavrba/noannoyance.git`

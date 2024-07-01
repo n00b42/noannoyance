@@ -25,13 +25,10 @@ export default class StealMyFocus extends Extension {
       return;
 
     let settings = this.getSettings();
-    let preventDisable = settings.get_boolean('enable-ignorelist');
-    let byClassList = settings.get_strv('by-class');
+    let blocklist = settings.get_strv('blocklist');
 
-    if (preventDisable && byClassList.includes(window.get_wm_class())) {
-      return;
+    if (!blocklist.includes(window.get_wm_class())) {
+      Main.activateWindow(window);
     }
-
-    Main.activateWindow(window);
   }
 }

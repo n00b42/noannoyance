@@ -7,8 +7,7 @@ import Adw from 'gi://Adw';
 
 import {ExtensionPreferences} from 'resource:///org/gnome/Shell/Extensions/js/extensions/prefs.js';
 
-const WMCLASS_LIST = 'by-class';
-const IGNORELIST_ENABLED = 'enable-ignorelist';
+const BLOCKLIST_KEY = 'blocklist';
 
 export default class Preferences extends ExtensionPreferences {
     fillPreferencesWindow(window) {
@@ -24,26 +23,13 @@ export default class Preferences extends ExtensionPreferences {
         });
         page.add(group);
 
-        let toggle = new Adw.SwitchRow({
-            title: "Enable Ignorelist",
-        });
-
-        group.add(toggle);
-
-        settings.bind(
-            IGNORELIST_ENABLED,
-            toggle,
-            "active",
-            Gio.SettingsBindFlags.DEFAULT
-        );
-
         let expander = new Adw.ExpanderRow({
             title: 'WM__CLASS List ("Alt + F2" > Run "lg" > Click "Windows")',
         });
 
         const customListStore = new Gtk.ListStore();
         customListStore.set_column_types([GObject.TYPE_STRING]);
-        const customInitArray = settings.get_strv(WMCLASS_LIST);
+        const customInitArray = settings.get_strv(BLOCKLIST_KEY);
         for (let i = 0; i < customInitArray.length; i++) {
             customListStore.set(customListStore.append(), [0], [customInitArray[i]]);
         }

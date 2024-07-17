@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schemalist>
 
-  <schema id="org.gnome.shell.extensions.noannoyance-fork" path="/org/gnome/shell/extensions/noannoyance/">
+  <schema id="org.gnome.shell.extensions.noannoyance-fork" path="/org/gnome/shell/extensions/noannoyance-fork/">
     <key name="blocklist" type="as">
       <default>['Microsoft Teams - Preview']</default>
       <summary>By 'WM_CLASS.'</summary>
